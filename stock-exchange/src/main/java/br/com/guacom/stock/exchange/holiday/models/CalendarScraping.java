@@ -10,6 +10,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import br.com.guacom.stock.exchange.holiday.json.adapter.HolidayJson;
 import br.com.guacom.stock.exchange.holiday.util.Key;
@@ -18,12 +20,15 @@ public class CalendarScraping {
 	private final String URL = "http://www.b3.com.br/pt_br/solucoes/plataformas/puma-trading-system/para-participantes-e-traders/calendario-de-negociacao/feriados/#panel1a";
 	private Document doc;
 	private JsonNode jsonNode;
+	private ArrayNode arrayNode;
 	private Elements elements;
 	private List<Title> titles;
 	private List<String> descriptionData;
 
 	public CalendarScraping() {
 		titles = new ArrayList<>();
+		descriptionData = new ArrayList<>();
+		arrayNode = new ObjectMapper().createArrayNode();
 		openConnection();
 	}
 
@@ -35,32 +40,58 @@ public class CalendarScraping {
 		}
 	}
 
-//	Taking the data necessary and generating json
-	public void buildJsonThroughTag(int index) {
+//	Taking the data necessary and generating json.
+	public void buildJsonThroughTheDataInTheTag() {
 		try {
 			elements = doc.getElementsByClass("bg-conteudo").first().getElementsByClass("accordion").first()
 					.getElementsByClass("accordion-navigation");
-//			for (int i = 0; i < elements.size(); i++) {
-				String month = getMonthOfTag(elements, index);
-				Elements elementsOfTag = elements.get(index).getElementsByTag("tbody").first().getElementsByTag("tr");
-//				if (elementsOfTag.size() == 1) {
-					Integer day = getDayOfTag(elementsOfTag);
-					String event = getEventOfTag(elementsOfTag);
+			for (int i = 0; i < elements.size(); i++) {
+			String month = getMonthOfTag(elements, i);
+			Elements elementsOfTag = elements.get(i).getElementsByTag("tbody").first().getElementsByTag("tr");
+				if (elementsOfTag.size() == 1) {
+					Integer day = getDayOfTag(elementsOfTag, 0);
+					String event = getEventOfTag(elementsOfTag, 0);
 					getTextsOfTag(elementsOfTag);
 					toJson(day, month, event, titles);
-//				}
-//				else {
-					
-//				}
-//			}
+				}
+				else {
+					for (int j = 0; j < elementsOfTag.size(); j++) {
+						Integer day = getDayOfTag(elementsOfTag, j);
+						String event = getEventOfTag(elementsOfTag, j);
+						getTextsOfTag(elementsOfTag.get(j));
+						toJson(day, month, event, titles);
+					}
+				}
+			}
 		} catch (Exception e) {
 			System.out.println("Erro: " + e.getMessage());
 		}
 	}
-
-	private String getEventOfTag(Elements elements) {
+	
+//	Get all tags td and check if inside the tag has text.
+//	Will only be executed if there is only one month holiday.
+	private void getTextsOfTag(Elements elements) {
+		for (int i = 0; i < elements.size(); i++) {
+			getTextsOfTag(elements.get(i));
+		}
+	}
+	
+//	Get all tags td and check if inside the tag has text. 
+//	Will only be executed if there is more than one month holiday.
+	private void getTextsOfTag(Element element) {
+		Elements elementsByTag = element.getElementsByTag("td");
+		titles.clear();
+		for (int j = 0; j < elementsByTag.size(); j++) {
+			if (j > 1 && elementsByTag.get(j).hasText()) {
+				associateDescriptionWithTitle(elementsByTag.get(j));
+				continue;
+			}
+		}
+	}
+	
+	private String getEventOfTag(Elements elements, int index) {
 		String event;
-		event = elements.first().getElementsByTag("td").get(1).text();
+		event = elements.get(index).getElementsByTag("td").get(1).text();
 		return event;
 	}
 
@@ -68,26 +99,11 @@ public class CalendarScraping {
 		return elements.get(index).getElementsByTag("a").first().text();
 	}
 
-	private Integer getDayOfTag(Elements elements) {
-		return Integer.parseInt(elements.first().getElementsByTag("td").first().text());
+	private Integer getDayOfTag(Elements elements, int index) {
+		return Integer.parseInt(elements.get(index).getElementsByTag("td").first().text());
 	}
 
-//	Pega todas as tags td e checa se dentro da tag possui texto
-//	Get all tags td and check if inside the tag has text
-	private void getTextsOfTag(Elements elements) {
-		for (int i = 0; i < elements.size(); i++) {
-			Elements elementsByTag = elements.get(i).getElementsByTag("td");
-			for (int j = 0; j < elementsByTag.size(); j++) {
-				if (j > 1 && elementsByTag.get(j).hasText()) {
-					associateDescriptionWithTitle(elementsByTag.get(j));
-					continue;
-				}
-			}
-		}
-	}
-
-//	Pega todas as descrições e associa ao seu respectivo título
-//	It takes all the descriptions and associates to its respective title
+//	It takes all the descriptions and associates to its respective title.
 	private void associateDescriptionWithTitle(Element element) {
 		StringBuilder builder = new StringBuilder();
 		Elements descriptionsElements = element.getElementsByTag("ul");
@@ -106,20 +122,19 @@ public class CalendarScraping {
 	public void toJson(Integer day, String month, String event, List<Title> titles) {
 		HolidayJson adapterForJson = new HolidayJson();
 		jsonNode = adapterForJson.toJson(day, month, event, titles);
+		arrayNode.add(jsonNode);
 	}
 
-//	Procurando um padrão para pegar as descrições separadamente. Todas as descrições possuem este padrão
-//	Looking for a pattern to pick up the descriptions separately. All descriptions have this pattern
+//	Looking for a pattern to pick up the descriptions separately. All descriptions have this pattern.
 	private void findForPattern(String data) {
-		if (data.contains(";") || data.contains(".")) {
-			applyPattern(data);
+		if (data.contains(Key.EXPRESSION_REGULAR_1.getKey()) || data.contains(Key.EXPRESSION_REGULAR_2.getKey())) {
+			splitBasedPattern(data);
 		}
 	}
 
-//	Aplicando o padrão de quebra para capturar as descrições separadamente.
 //	Applying the break pattern to capture the descriptions separately.
-	private void applyPattern(String data) {
-		descriptionData = new ArrayList<>();
+	private void splitBasedPattern(String data) {
+		descriptionData.clear();
 		String[] offset = data.split(Key.EXPRESSION_REGULAR_1.getKey());
 		for (int i = 0; i < offset.length; i++) {
 			if (offset[i].contains(Key.EXPRESSION_REGULAR_2.getKey())) {
@@ -131,7 +146,7 @@ public class CalendarScraping {
 		}
 	}
 
-	public JsonNode getJsonNode() {
-		return jsonNode;
+	public ArrayNode getJsonNode() {
+		return arrayNode;
 	}
 }

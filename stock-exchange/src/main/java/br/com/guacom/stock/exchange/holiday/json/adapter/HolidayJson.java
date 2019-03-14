@@ -1,6 +1,8 @@
 package br.com.guacom.stock.exchange.holiday.json.adapter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -16,16 +18,18 @@ import br.com.guacom.stock.exchange.holiday.util.Messages;
 
 public class HolidayJson {
 	private ObjectMapper mapper;
-	private ArrayNode arrayNode;
-	
+
 	public HolidayJson() {
 		mapper = new ObjectMapper();
 	}
 
-	public Holiday fromJson(JsonNode json) {
+	public List<Holiday> fromJson(ArrayNode json) {
+		List<Holiday> holidays = new ArrayList<>();
 		try {
-			Holiday holiday = mapper.convertValue(json, Holiday.class);
-			return holiday;
+			for (Iterator<JsonNode> it = json.iterator(); it.hasNext();) {
+				holidays.add(mapper.convertValue(it.next(), Holiday.class));
+			}
+			return holidays;
 		} catch (IllegalArgumentException ex) {
 			System.out.println("Erro: " + ex.getMessage());
 		}
@@ -38,12 +42,10 @@ public class HolidayJson {
 		objectNode.put(Key.MONTH.getKey(), month);
 		objectNode.put(Key.EVENT.getKey(), event);
 		ArrayNode jsonTitles = objectNode.putArray(Key.TITLES.getKey());
-		configureTitles(titles, jsonTitles);
-		arrayNode.add(objectNode);
-		return arrayNode;
+		putTitles(titles, jsonTitles);
+		return objectNode;
 	}
 
-//	Transformando o json em string
 //	Transforming json into string
 	public String prettyPrintJsonString(JsonNode jsonNode) {
 		try {
@@ -55,17 +57,21 @@ public class HolidayJson {
 		throw new NoSuchElementException();
 	}
 
-	private void configureTitles(List<Title> titles, ArrayNode jsonTitles) {
+	private void putTitles(List<Title> titles, ArrayNode jsonTitles) {
 		for (Title t : titles) {
 			ObjectNode jsonTitle = mapper.createObjectNode();
 			jsonTitle.put(Key.NAME.getKey(), t.getName());
 			ArrayNode jsonDescriptions = jsonTitle.putArray(Key.DESCRIPTIONS.getKey());
-			for (String d : t.getDescriptions()) {
-				ObjectNode jsonDescription = mapper.createObjectNode();
-				jsonDescription.put(Key.DESCRIPTION.getKey(), d);
-				jsonDescriptions.add(jsonDescription);
-			}
+			putDescriptions(t, jsonDescriptions);
 			jsonTitles.add(jsonTitle);
+		}
+	}
+
+	private void putDescriptions(Title t, ArrayNode jsonDescriptions) {
+		for (String d : t.getDescriptions()) {
+			ObjectNode jsonDescription = mapper.createObjectNode();
+			jsonDescription.put(Key.DESCRIPTION.getKey(), d);
+			jsonDescriptions.add(jsonDescription);
 		}
 	}
 }
