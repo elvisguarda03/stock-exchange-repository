@@ -43,31 +43,43 @@ public class CalendarScraping {
 //	Taking the data necessary and generating json.
 	public void buildJsonThroughTheDataInTheTag() {
 		try {
-			elements = doc.getElementsByClass("bg-conteudo").first().getElementsByClass("accordion").first()
-					.getElementsByClass("accordion-navigation");
+			elements = getListElementsByClass();
 			for (int i = 0; i < elements.size(); i++) {
-			String month = getMonthOfTag(elements, i);
-			Elements elementsOfTag = elements.get(i).getElementsByTag("tbody").first().getElementsByTag("tr");
-				if (elementsOfTag.size() == 1) {
-					Integer day = getDayOfTag(elementsOfTag, 0);
-					String event = getEventOfTag(elementsOfTag, 0);
-					getTextsOfTag(elementsOfTag);
-					toJson(day, month, event, titles);
-				}
-				else {
-					for (int j = 0; j < elementsOfTag.size(); j++) {
-						Integer day = getDayOfTag(elementsOfTag, j);
-						String event = getEventOfTag(elementsOfTag, j);
-						getTextsOfTag(elementsOfTag.get(j));
-						toJson(day, month, event, titles);
-					}
-				}
+				String month = getMonthOfTag(elements, i);
+				Elements elementsOfTag = getListContentsByTag(i);
+				Integer day = null;
+				String event = null;
+				assignValues(elementsOfTag, day, event);
+				toJson(day, month, event, titles);
 			}
 		} catch (Exception e) {
 			System.out.println("Erro: " + e.getMessage());
 		}
 	}
-	
+
+	private Elements getListContentsByTag(int index) {
+		return elements.get(index).getElementsByTag("tbody").first().getElementsByTag("tr");
+	}
+
+	private void assignValues(Elements elementsOfTag, Integer day, String event) {
+		if (elementsOfTag.size() == 1) {
+			day = getDayOfTag(elementsOfTag, 0);
+			event = getEventOfTag(elementsOfTag, 0);
+			getTextsOfTag(elementsOfTag);
+		} else {
+			for (int j = 0; j < elementsOfTag.size(); j++) {
+				day = getDayOfTag(elementsOfTag, j);
+				event = getEventOfTag(elementsOfTag, j);
+				getTextsOfTag(elementsOfTag.get(j));
+			}
+		}
+	}
+
+	private Elements getListElementsByClass() {
+		return doc.getElementsByClass("bg-conteudo").first().getElementsByClass("accordion").first()
+				.getElementsByClass("accordion-navigation");
+	}
+
 //	Get all tags td and check if inside the tag has text.
 //	Will only be executed if there is only one month holiday.
 	private void getTextsOfTag(Elements elements) {
@@ -75,7 +87,7 @@ public class CalendarScraping {
 			getTextsOfTag(elements.get(i));
 		}
 	}
-	
+
 //	Get all tags td and check if inside the tag has text. 
 //	Will only be executed if there is more than one month holiday.
 	private void getTextsOfTag(Element element) {
@@ -88,11 +100,9 @@ public class CalendarScraping {
 			}
 		}
 	}
-	
+
 	private String getEventOfTag(Elements elements, int index) {
-		String event;
-		event = elements.get(index).getElementsByTag("td").get(1).text();
-		return event;
+		return elements.get(index).getElementsByTag("td").get(1).text();
 	}
 
 	private String getMonthOfTag(Elements elements, int index) {
@@ -103,20 +113,37 @@ public class CalendarScraping {
 		return Integer.parseInt(elements.get(index).getElementsByTag("td").first().text());
 	}
 
-//	It takes all the descriptions and associates to its respective title.
+//	Associates the descriptions to their respective title.
 	private void associateDescriptionWithTitle(Element element) {
+		Elements descriptionsElements = getListDescriptions(element);
+		Elements titleElement = getTagTitle(element);
 		StringBuilder builder = new StringBuilder();
-		Elements descriptionsElements = element.getElementsByTag("ul");
-		Elements titleElement = element.getElementsByTag("p");
 		for (int i = 0; i < descriptionsElements.size(); i++) {
-			builder.append(descriptionsElements.get(i).text().trim());
+			appendDescription(descriptionsElements, builder, i);
 			findForPattern(builder.toString());
-			if (titleElement.size() > i) {
-				titles.add(new Title(titleElement.get(i).text(), descriptionData));
-				continue;
-			}
-			titles.add(new Title(descriptionData));
+			checkIfExistsTitle(titleElement, i);
 		}
+	}
+
+	private void checkIfExistsTitle(Elements titleElement, int amount) {
+		if (titleElement.size() > amount) {
+			titles.add(new Title(titleElement.get(amount).text(), descriptionData));
+			return;
+		}
+		titles.add(new Title(descriptionData));
+	}
+
+	private Elements getTagTitle(Element element) {
+		return element.getElementsByTag("p");
+	}
+
+	private Elements getListDescriptions(Element element) {
+		return element.getElementsByTag("ul");
+	}
+
+	private StringBuilder appendDescription(Elements descriptionsElements, StringBuilder builder, int i) {
+		builder.append(descriptionsElements.get(i).text().trim());
+		return builder;
 	}
 
 	public void toJson(Integer day, String month, String event, List<Title> titles) {

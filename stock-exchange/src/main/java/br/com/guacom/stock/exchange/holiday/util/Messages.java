@@ -2,11 +2,7 @@ package br.com.guacom.stock.exchange.holiday.util;
 
 public enum Messages {
 	MSG_1("Os campos não podem estar vázios!"),
-	MSG_2("Não existem elementos!"),
-	MSG_3(""),
-	MSG_4(""),
-	MSG_5(""),
-	MSG_6("");
+	MSG_2("Não existem elementos!");
 	
 	private String message;
 	
