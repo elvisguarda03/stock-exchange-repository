@@ -22,7 +22,7 @@ public class CalendarScraping {
 	private ArrayNode arrayNode;
 	private HolidayJson adapterForJson;
 	private Elements elements;
-	private List<Title> titles;
+	private List<Titulo> titles;
 	private List<String> descriptionData;
 
 	public CalendarScraping() {
@@ -42,7 +42,7 @@ public class CalendarScraping {
 	public void buildJsonThroughTheDataInTheTag() throws Exception {
 		elements = getListElementsByClass();
 		for (int i = 0; i < 11; i++) {
-			verifyAmountOfHolidaysInTheMonth(i);
+			assignValues(i);
 		}
 	}
 
@@ -50,38 +50,31 @@ public class CalendarScraping {
 		return elements.get(index).getElementsByTag("tbody").first().getElementsByTag("tr");
 	}
 
-	private void verifyAmountOfHolidaysInTheMonth(int index) {
+	private void assignValues(int index) {
 		String monthPrevious = null;
 		Elements holidays = getListContentsByTag(index);
-		Month month = new Month(getMonthOfTag(elements, index));
-		monthPrevious = month.getMonth();
-		Integer day = null;
-		String event = null;
-		if (holidays.size() == 1) {
-			day = getDayOfTag(holidays, 0);
-			event = getEventOfTag(holidays, 0);
-			getTextsOfTag(holidays);
-			toJson(day, month, event, titles);
-		} else {
-			for (int i = 0; i < holidays.size(); i++) {
-				day = getDayOfTag(holidays, i);
-				event = getEventOfTag(holidays, i);
-				getTextsOfTag(holidays.get(i));
-				if (i > 0 && monthPrevious.equalsIgnoreCase(month.getMonth())) {
-					toJson(monthPrevious, day, event, titles);
-					continue;
-				}
-				toJson(day, month, event, titles);
+		Mes month = new Mes(getMonthOfTag(elements, index));
+		monthPrevious = month.getMes();
+		bind(monthPrevious, holidays, month);
+	}
+
+	private void bind(String monthPrevious, Elements holidays, Mes month) {
+		Integer day;
+		String event;
+		for (int i = 0; i < holidays.size(); i++) {
+			day = getDayOfTag(holidays, i);
+			event = getEventOfTag(holidays, i);
+			getTextsOfTag(holidays.get(i));
+			if (i > 0 && monthPrevious.equalsIgnoreCase(month.getMes())) {
+				toJson(monthPrevious, day, event, titles);
+				continue;
 			}
+			toJson(day, month, event, titles);
 		}
 	}
 
-//	private void assignValues(Elements elementsOfTag, Integer day, String event, int index) {
-//		day = getDayOfTag(elementsOfTag, index);
-//		event = getEventOfTag(elementsOfTag, index);
-//	}
-
-	private void toJson(String month, Integer day, String event, List<Title> titles) {
+//	Adding a new holiday for the month
+	private void toJson(String month, Integer day, String event, List<Titulo> titles) {
 		ArrayNode json = adapterForJson.toJson(month, day, arrayNode, event, titles);
 		arrayNode.removeAll();
 		arrayNode.addAll(json);
@@ -92,12 +85,6 @@ public class CalendarScraping {
 				.getElementsByClass("accordion-navigation");
 	}
 
-//	Will only be executed if there is only one month holiday.
-	private void getTextsOfTag(Elements elements) {
-		getTextsOfTag(elements.first());
-	}
-
-//	Will only be executed if there is more than one month holiday.
 	private void getTextsOfTag(Element element) {
 		Elements elementsByTag = getAllTagTd(element);
 		titles = new ArrayList<>();
@@ -139,10 +126,10 @@ public class CalendarScraping {
 
 	private void checkIfExistsTitle(Elements titleElement, int amount) {
 		if (titleElement.size() > amount) {
-			titles.add(new Title(titleElement.get(amount).text(), descriptionData));
+			titles.add(new Titulo(titleElement.get(amount).text(), descriptionData));
 			return;
 		}
-		titles.add(new Title(descriptionData));
+		titles.add(new Titulo(descriptionData));
 	}
 
 	private Elements getTagTitle(Element element) {
@@ -158,9 +145,9 @@ public class CalendarScraping {
 		return builder;
 	}
 
-	public void toJson(Integer day, Month month, String event, List<Title> titles) {
+	public void toJson(Integer day, Mes month, String event, List<Titulo> titles) {
 		adapterForJson = new HolidayJson();
-		JsonNode jsonNode = adapterForJson.toJson(day, month.getMonth(), event, titles);
+		JsonNode jsonNode = adapterForJson.toJson(day, month.getMes(), event, titles);
 		arrayNode.add(jsonNode);
 	}
 

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="w3.org/1999/xhtml" xmlns:th="www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="Calendário de Feriados">
+<meta name="author" content="Elvis">
+</head>
+<body>
+	<div th:replace="fragments/_template.html :: navBar">
+	</div>
+	<div th:replace="fragments/_template.html :: body">
+	</div>
+	
+	<div class="container">
+		<ul th:each="json : ${jsons}">
+			<li th:text="${json}"></li>
+		</ul>
+	</div>
+	
+	<div th:replace="fragments/_template.html :: footer">
+	</div>
+</body>
+</html>

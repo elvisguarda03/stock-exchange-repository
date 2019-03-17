@@ -11,13 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import br.com.guacom.stock.exchange.holiday.util.Messages;
 
 @Entity
-public class Month implements Serializable {
+public class Mes implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@JsonIgnore
@@ -25,33 +24,31 @@ public class Month implements Serializable {
 	@GeneratedValue
 	private Integer id;
 
-	@JsonAlias("mes")
 	@Column(name = "mes")
-	private String month;
+	private String mes;
 
-	@JsonAlias("feriados")
 	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn(name = "id_mes")
-	private List<Holiday> holidays;
+	private List<Feriado> feriados;
 
-	public Month(Integer id, String month, List<Holiday> holidays) {
-		if(month.isBlank() || holidays == null)
+	public Mes(Integer id, String mes, List<Feriado> feriados) {
+		if(mes.isBlank() || feriados == null)
 			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
 		this.id = id;
-		this.month = month;
-		this.holidays = holidays;
+		this.mes = mes;
+		this.feriados = feriados;
 	}
 
-	public Month(String month, List<Holiday> holidays) {
-		this(null, month, holidays);
+	public Mes(String mes, List<Feriado> feriados) {
+		this(null, mes, feriados);
 	}
 	
-	public Month(String month) {
-		if(month.isBlank())
+	public Mes(String mes) {
+		if(mes.isBlank())
 			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
-		this.month = month;
+		this.mes = mes;
 	}
-	public Month() {}
+	public Mes() {}
 
 	public Integer getId() {
 		return id;
@@ -61,19 +58,24 @@ public class Month implements Serializable {
 		this.id = id;
 	}
 
-	public String getMonth() {
-		return month;
+	public String getMes() {
+		return mes;
 	}
 
-	public void setMonth(String month) {
-		this.month = month;
+	public void setMes(String mes) {
+		this.mes = mes;
 	}
 
-	public List<Holiday> getHolidays() {
-		return holidays;
+	public List<Feriado> getFeriados() {
+		return feriados;
 	}
 
-	public void setHolidays(List<Holiday> holidays) {
-		this.holidays = holidays;
+	public void setFeriados(List<Feriado> feriados) {
+		this.feriados = feriados;
+	}
+	
+	@Override
+	public String toString() {
+		return "id = " + id + ", mes" + mes + ", feriados " + feriados;
 	}
 }

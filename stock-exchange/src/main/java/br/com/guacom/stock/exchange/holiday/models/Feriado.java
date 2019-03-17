@@ -10,7 +10,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -18,7 +17,7 @@ import br.com.guacom.stock.exchange.holiday.util.Messages;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
-public class Holiday implements Serializable {
+public class Feriado implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@JsonIgnore
@@ -26,38 +25,35 @@ public class Holiday implements Serializable {
 	@GeneratedValue
 	private Integer id;
 	
-	@JsonAlias("dia")
-	private Integer day;
+	private Integer dia;
 	
-	@JsonAlias("evento")
-	private String event;
+	private String evento;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = false)
 	@JoinColumn(name="id_holiday")
-	@JsonAlias("titulos")
-	private List<Title> titles;
+	private List<Titulo> titulos;
 	
-	public Holiday(Integer id, Integer day, String event, List<Title> titles) {
-		if(day == null || event.isBlank()|| titles == null || titles.size() == 0)
+	public Feriado(Integer id, Integer dia, String evento, List<Titulo> titulos) {
+		if(dia == null || evento.isBlank()|| titulos == null || titulos.size() == 0)
 			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
 		this.id = id;
-		this.day = day;
-		this.event = event;
-		this.titles = titles;
+		this.dia = dia;
+		this.evento = evento;
+		this.titulos = titulos;
 	}
 	
-	public Holiday(Integer day, String event, List<Title> titles) {
-		this(null, day, event, titles);
+	public Feriado(Integer dia, String evento, List<Titulo> titulos) {
+		this(null, dia, evento, titulos);
 	}
 	
-	public Holiday(Integer day, String event) {
-		if(day == null || event.isBlank())
+	public Feriado(Integer dia, String evento) {
+		if(dia == null || evento.isBlank())
 			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
-		this.day = day;
-		this.event = event;
+		this.dia = dia;
+		this.evento = evento;
 	}
 
-	public Holiday() {}
+	public Feriado() {}
 	
 	public Integer getId() {
 		return id;
@@ -67,32 +63,32 @@ public class Holiday implements Serializable {
 		this.id = id;
 	}
 	
-	public Integer getDay() {
-		return day;
+	public Integer getDia() {
+		return dia;
 	}
 	
-	public void setDay(Integer day) {
-		this.day = day;
+	public void setDia(Integer dia) {
+		this.dia = dia;
 	}
 	
-	public String getEvent() {
-		return event;
+	public String getEvento() {
+		return evento;
 	}
 	
-	public void setEvent(String event) {
-		this.event = event;
+	public void setEvento(String evento) {
+		this.evento = evento;
 	}
 	
-	public List<Title> getTitles() {
-		return titles;
+	public List<Titulo> getTitulos() {
+		return titulos;
 	}
 	
-	public void setTitles(List<Title> titles) {
-		this.titles = titles;
+	public void setTitulos(List<Titulo> titulos) {
+		this.titulos = titulos;
 	}
 	
 	@Override
 	public String toString() {
-		return "Dia: " + day + ", feriado - " + event + ", títulos " + titles;
+		return "Dia: " + dia + ", feriado - " + evento + ", títulos " + titulos;
 	}
 }
