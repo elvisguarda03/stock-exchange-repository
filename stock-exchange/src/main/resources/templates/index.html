@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns="w3.org/1999/xhtml" xmlns:th="www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>Calendário de Feriados</title>
+
+<link href="bootstrap/vendor/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+<link href="bootstrap/css/scrolling-nav.css" rel="stylesheet">
+<link href="css/lista.css" rel="stylesheet">
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/css/bootstrap.min.css"
+	integrity="sha384-2hfp1SzUoho7/TsGGGDaFdsuuDL0LX2hnUp6VkX3CUQ2K4K+xjboZdsXyp4oUHZj"
+	crossorigin="anonymous">
+
+</head>
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
+		id="mainNav">
+		<div class="container">
+			<a class="navbar-brand js-scroll-trigger" href="#page-top">Calendário
+				de Feriados da Bolsa de Valores</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse"
+				data-target="#navbarResponsive" aria-controls="navbarResponsive"
+				aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarResponsive">
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item"><a class="nav-link js-scroll-trigger"
+						href="#about">Dados Json</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<section>
+		<header class="bg-primary text-white">
+			<div class="container text-center">
+				<h1>Bem-vindo ao Calendário de Feriados</h1>
+				<p class="lead">Dados 100% confiáveis, extraidos da página
+					oficial da Bolsa brasileira.</p>
+			</div>
+		</header>
+	</section>
+
+	<section id="table">
+		<div class="container-fluid">
+			<div class="container">
+				<div id="faq" role="tablist" aria-multiselectable="true">
+					<th:block th:each="m : ${months}">
+						<div class="card">
+							<div class="card-header" role="tab" id="questionOne">
+								<h5 class="card-title">
+									<a data-toggle="collapse" data-parent="#faq"
+										th:href="'#collapse' + @{${m.id}}" th:text="${m.month}"
+										aria-expanded="false" th:attr="aria-controls=${m.id}"> </a>
+								</h5>
+							</div>
+							<div th:id="'collapse' + ${m.id}" class="collapse" role="tabcard"
+								aria-labelledby="questionOne">
+								<div class="card-block">
+									<div class="content">
+										<ul>
+											<li>
+												<table>
+													<thead>
+														<tr>
+															<td>Dia</td>
+															<td>Evento</td>
+															<td>&nbsp;</td>
+															<td>Descrição</td>
+														</tr>
+													</thead>
+													<tbody>
+														<tr th:each="h : ${m.holidays}">
+															<td th:text="${h.day}"></td>
+															<td th:text="${h.event}"></td>
+															<td th:each="t : ${h.titles}">
+																<p>
+																	<strong th:if="${not #strings.isEmpty(t.name)}"
+																		th:text="${t.name}"></strong>
+																<ul>
+																	<li th:each="d : ${t.descriptions}" th:text="${d}"></li>
+																</ul>
+																</p>
+															</td>
+															<td>&nbsp;</td>
+														</tr>
+													</tbody>
+												</table>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</th:block>
+			</div>
+		</div>
+	</section>
+	<section id="about">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-8 mx-auto">
+					<h2>Sobre esta página</h2>
+					<p class="lead">Informações de grande relevância sobre todos os
+						feriados anuais que afetam as operações da bolsa de valores
+						diretamente.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<footer class="py-5 bg-dark">
+		<div class="container">
+			<p class="m-0 text-center text-white">Copyright © Stock-Exchange
+				2019</p>
+		</div>
+	</footer>
+
+	<script src="bootstrap/vendor/jquery/jquery.min.js"></script>
+	<script src="bootstrap/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<script src="bootstrap/vendor/jquery-easing/jquery.easing.min.js"></script>
+	<script src="bootstrap/js/scrolling-nav.js"></script>
+	<script
+		src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"
+		integrity="sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"
+		integrity="sha384-Plbmg8JY28KFelvJVai01l8WyZzrYWG825m+cZ0eDDS1f7d/js6ikvy1+X+guPIB"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/js/bootstrap.min.js"
+		integrity="sha384-VjEeINv9OSwtWFLAtmc4JCtEJXXBub00gtSnszmspDLCtC0I4z4nqz7rEFbIZLLU"
+		crossorigin="anonymous"></script>
+	<script src="js/initiliaze.js" type="text/javascript"></script>
+</body>
+</html>

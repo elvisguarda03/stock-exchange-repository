@@ -12,24 +12,26 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import br.com.guacom.stock.exchange.holiday.models.Holiday;
+import br.com.guacom.stock.exchange.holiday.models.Month;
 import br.com.guacom.stock.exchange.holiday.models.Title;
 import br.com.guacom.stock.exchange.holiday.util.Key;
 import br.com.guacom.stock.exchange.holiday.util.Messages;
 
 public class HolidayJson {
 	private ObjectMapper mapper;
-
+	private ArrayNode arrayNode;
+	
 	public HolidayJson() {
 		mapper = new ObjectMapper();
+		arrayNode = mapper.createArrayNode();
 	}
 
-	public List<Holiday> fromJson(ArrayNode json) {
-		List<Holiday> holidays = new ArrayList<>();
+	public List<Month> fromJson(ArrayNode json) {
+		List<Month> months = new ArrayList<>();
 		try {
-			for (Iterator<JsonNode> it = json.iterator(); it.hasNext();) {
-				holidays.add(mapper.convertValue(it.next(), Holiday.class));
-			}
-			return holidays;
+			for (Iterator<JsonNode> it = json.iterator(); it.hasNext();)
+				months.add(mapper.convertValue(it.next(), Month.class));
+			return months;
 		} catch (IllegalArgumentException ex) {
 			System.out.println("Erro: " + ex.getMessage());
 		}
@@ -38,12 +40,38 @@ public class HolidayJson {
 
 	public JsonNode toJson(Integer day, String month, String event, List<Title> titles) {
 		ObjectNode objectNode = mapper.createObjectNode();
-		objectNode.put(Key.DAY.getKey(), day);
 		objectNode.put(Key.MONTH.getKey(), month);
-		objectNode.put(Key.EVENT.getKey(), event);
-		ArrayNode jsonTitles = objectNode.putArray(Key.TITLES.getKey());
-		putTitles(titles, jsonTitles);
+		ArrayNode jsonHolidays = objectNode.putArray(Key.HOLIDAYS.getKey());
+		assignValues(day, event, titles, jsonHolidays);
+		arrayNode.add(objectNode);
 		return objectNode;
+	}
+	
+	public ArrayNode toJson(String month, Integer day, ArrayNode arrayNode, String event, List<Title> titles) {
+		List<Month> months = fromJson(arrayNode);
+		ArrayNode jsonMonths = mapper.createArrayNode();
+		for (Month m : months) {
+			ObjectNode objectMonth = jsonMonths.objectNode();
+			objectMonth.put(Key.MONTH.getKey(), m.getMonth());
+			ArrayNode jsonHolidays = objectMonth.putArray(Key.HOLIDAYS.getKey());
+			if(m.getMonth().equalsIgnoreCase(month))
+				m.getHolidays().add(new Holiday(day, event, titles));
+			for (Holiday h : m.getHolidays()) {
+				assignValues(h.getDay(), h.getEvent(), h.getTitles(), jsonHolidays);
+			}
+			jsonMonths.add(objectMonth);
+		}
+		return jsonMonths;
+	}
+
+	private ObjectNode assignValues(Integer day, String event, List<Title> titles, ArrayNode jsonHolidays) {
+		ObjectNode jsonHoliday = jsonHolidays.objectNode();
+		jsonHoliday.put(Key.DAY.getKey(), day);
+		jsonHoliday.put(Key.EVENT.getKey(), event);
+		ArrayNode jsonTitles = jsonHoliday.putArray(Key.TITLES.getKey());
+		putTitles(titles, jsonTitles);
+		jsonHolidays.add(jsonHoliday);
+		return jsonHoliday;
 	}
 
 //	Transforming json into string

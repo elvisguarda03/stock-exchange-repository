@@ -1,5 +1,6 @@
 package br.com.guacom.stock.exchange.holiday.models;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -17,7 +18,9 @@ import br.com.guacom.stock.exchange.holiday.util.Messages;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
-public class Holiday {
+public class Holiday implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	@JsonIgnore
 	@Id
 	@GeneratedValue
@@ -26,35 +29,32 @@ public class Holiday {
 	@JsonAlias("dia")
 	private Integer day;
 	
-	@JsonAlias("mes")
-	private String month;
-	
 	@JsonAlias("evento")
 	private String event;
 
-	@OneToMany(cascade = CascadeType.ALL,orphanRemoval = false)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = false)
 	@JoinColumn(name="id_holiday")
 	@JsonAlias("titulos")
 	private List<Title> titles;
 	
-	public Holiday(Integer id, Integer day, String month, String event, List<Title> titles) {
-		if(day == null || event.isBlank() || month.isBlank() || titles == null || titles.size() == 0)
+	public Holiday(Integer id, Integer day, String event, List<Title> titles) {
+		if(day == null || event.isBlank()|| titles == null || titles.size() == 0)
 			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
 		this.id = id;
 		this.day = day;
-		this.month = month;
 		this.event = event;
 		this.titles = titles;
 	}
 	
-	public Holiday(Integer dia, String mes, String evento, List<Title> titulos) {
-		this(null, dia, mes, evento, titulos);
+	public Holiday(Integer day, String event, List<Title> titles) {
+		this(null, day, event, titles);
 	}
 	
-	public Holiday(Integer dia, String mes, String evento) {
-		this.day = dia;
-		this.month = mes;
-		this.event = evento;
+	public Holiday(Integer day, String event) {
+		if(day == null || event.isBlank())
+			throw new IllegalArgumentException(Messages.MSG_1.getMessage());
+		this.day = day;
+		this.event = event;
 	}
 
 	public Holiday() {}
@@ -75,14 +75,6 @@ public class Holiday {
 		this.day = day;
 	}
 	
-	public String getMonth() {
-		return month;
-	}
-	
-	public void setMonth(String month) {
-		this.month = month;
-	}
-	
 	public String getEvent() {
 		return event;
 	}
@@ -101,6 +93,6 @@ public class Holiday {
 	
 	@Override
 	public String toString() {
-		return "Dia: " + day + ", Mês: " + month + ", feriado - " + event + ", títulos " + titles;
+		return "Dia: " + day + ", feriado - " + event + ", títulos " + titles;
 	}
 }

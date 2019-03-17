@@ -3,6 +3,7 @@ package br.com.guacom.stock.exchange.holiday.models;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -28,6 +29,7 @@ public class Title {
 	@ElementCollection(fetch = FetchType.LAZY)
 	@JsonAlias("descricoes")
 	@JsonDeserialize(using = DescriptionDeserializer.class)
+	@Column(length = 10000)
 	private List<String> descriptions;
 
 	public Title(Integer id, String name, List<String> descriptions) {
